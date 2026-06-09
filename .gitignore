@@ -1,0 +1,11 @@
+# Google API Credentials (DO NOT REMOVE)
+credentials.json
+token.json
+
+# If you stored your client ID as a raw string in a config file
+config.py
+.env
+
+# Python temporary files and cache
+__pycache__/
+*.pyc
