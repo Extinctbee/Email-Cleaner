@@ -1,20 +1,41 @@
-
-
 services:
-  # Service 1: Our PostgreSQL Database Container
   db:
     image: postgres:15
     container_name: email_cleaner_db
+    platform: linux/amd64
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: supersecretpassword123
       POSTGRES_DB: email_cleaner
+      OAUTHLIB_INSECURE_TRANSPORT: "1"
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin  -d email_cleaner "]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: email_cleaner_app
+    platform: linux/amd64
+    environment:
+      DB_HOST: email_cleaner_db
+      DB_NAME: email_cleaner
+      DB_USER: admin
+      DB_PASSWORD: supersecretpassword123
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./src:/app/src
+      - ./credentials.json:/app/credentials.json:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    command: streamlit run src/GmailScript.py --server.port=8501 --server.address=0.0.0.0
 
 volumes:
   postgres_data:
-  
-
