@@ -8,6 +8,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ src/
 COPY credentials.json .
 
-EXPOSE 8501
+EXPOSE 8000
 
-CMD ["streamlit", "run", "src/GmailScript.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

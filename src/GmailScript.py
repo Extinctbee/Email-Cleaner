@@ -10,67 +10,33 @@ import database
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
-# Database connection (lazy - only connect when needed)
-db_conn = None
-db_cur = None
 
-def get_db_connection():
-    global db_conn, db_cur
-    if db_conn is None:
-        try:
-            db_conn = psycopg2.connect(
-                host=os.getenv("DB_HOST", "localhost"),
-                database=os.getenv("DB_NAME", "email_cleaner"),
-                user=os.getenv("DB_USER", "admin"),
-                password=os.getenv("DB_PASSWORD", "supersecretpassword123")
-            )
-            db_cur = db_conn.cursor()
-            
-            # Create table if it doesn't exist
-            db_cur.execute("""
-                CREATE TABLE IF NOT EXISTS User_Emails (
-                    id SERIAL PRIMARY KEY,
-                    email VARCHAR(255) UNIQUE NOT NULL,
-                    refresh_token TEXT NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            """)
-            db_conn.commit()
-        except Exception as e:
-            st.error(f"Database connection failed: {e}")
-            return None, None
-    return db_conn, db_cur
 
-def save_user_to_db(email, token_filename):
-    conn, cur = get_db_connection()
-    if conn is None:
-        return False
-    try:
-        cur.execute(
-            "INSERT INTO User_Emails (email, refresh_token) VALUES (%s, %s) ON CONFLICT (email) DO UPDATE SET refresh_token = EXCLUDED.refresh_token",
-            (email, token_filename)
-        )
-        conn.commit()
-        return True
-    except Exception as e:
-        st.error(f"Failed to save user: {e}")
-        return False
 
-def login(service, userId):
-    User = service.users().getProfile(userId='me').execute()
-    return User
+def login(service):
+    
+    return service.users().getProfile(userId='me').execute()
+    
 
-def get_gmail_service(User_Emails):
+def get_gmail_service(User_Emails = None):
     creds = None
-    token_filename = f"{User_Emails}_token.pickle"
+    token_filename = f"{User_Emails}_token.pickle" if User_Emails else "temp_token.pickle"
     
-    flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
-    creds = flow.run_local_server(port=0)
-    
-    with open(token_filename, 'wb') as token:
-        pickle.dump(creds, token)
+    if User_Emails:
+        saved_token_filename = database.get_token_filename(User_Emails)
+        if saved_token_filename:
+            token_filename = saved_token_filename
+    if os.path.exists(token_filename):
+        with open(token_filename, 'rb') as token:
+            creds = pickle.load(token)
+    else:
+        flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+        creds = flow.run_local_server(port=0)
+        
+        with open(token_filename, 'wb') as token:
+            pickle.dump(creds, token)
 
-    return build('gmail', 'v1', credentials=creds)
+    return build('gmail', 'v1', credentials=creds) , token_filename
 
 def scan_inbox_by_batches(service, max_pages=10):
     sender_counts = {}

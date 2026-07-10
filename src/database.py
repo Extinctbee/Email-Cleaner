@@ -1,10 +1,12 @@
 import psycopg2
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_NAME = os.getenv("DB_NAME", "email_cleaner")
-DB_USER = os.getenv("DB_USER", "admin")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "supersecretpassword123")
+DB_HOST = os.getenv("DB_HOST")
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 conn = None
 cur = None
@@ -29,7 +31,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS User_Emails (
                 id SERIAL PRIMARY KEY,
                 email VARCHAR(255) unique NOT NULL,
-                refresh_token TEXT NOT NULL,
+                refresh_token TEXT ,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
@@ -37,6 +39,34 @@ def init_db():
         print("Database setup complete.")
     except Exception as e:
         print(f"Error setting up database: {e}")
+        raise
+
+def save_user_to_db(email, token_filename):
+    conn, cur = connect_db()
+    if conn is None:
+        return False
+    try:
+        cur.execute(
+            "INSERT INTO User_Emails (email, refresh_token) VALUES (%s, %s) ON CONFLICT (email) DO UPDATE SET refresh_token = EXCLUDED.refresh_token",
+            (email, token_filename)
+        )
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Failed to save user: {e}")
+        raise
+
+def get_token_filename(email):
+    try:
+        connect_db()
+        cur.execute("SELECT refresh_token FROM User_Emails WHERE email = %s", (email,))
+        row = cur.fetchone()
+        if row and row[0]:
+            return row[0]
+        return None
+    except Exception as e:
+        print(f"Failed to get token: {e}")
+        raise
 
 if __name__ == "__main__":
     init_db()

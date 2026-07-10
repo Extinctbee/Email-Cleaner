@@ -28,14 +28,14 @@ services:
       DB_USER: admin
       DB_PASSWORD: supersecretpassword123
     ports:
-      - "8501:8501"
+      - "8000:8000"
     volumes:
       - ./src:/app/src
       - ./credentials.json:/app/credentials.json:ro
     depends_on:
       db:
         condition: service_healthy
-    command: streamlit run src/GmailScript.py --server.port=8501 --server.address=0.0.0.0
+    
 
 volumes:
   postgres_data:
