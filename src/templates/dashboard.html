@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EmailCleaner — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+    :root {
+      --bg:       #0f1117;
+      --surface:  #181c27;
+      --surface2: #1e2333;
+      --border:   #252a38;
+      --accent:   #4f7cff;
+      --green:    #22c55e;
+      --yellow:   #f59e0b;
+      --red:      #ef4444;
+      --text:     #e8eaf0;
+      --muted:    #7a8099;
+      --radius:   12px;
+    }
+ 
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+ 
+    /* NAV */
+    nav {
+      position: sticky; top: 0;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 28px;
+      height: 56px;
+      background: rgba(15,17,23,.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+ 
+    .logo-mark {
+      width: 30px; height: 30px;
+      background: var(--accent);
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-mark svg { width: 16px; height: 16px; }
+ 
+    .logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px; font-weight: 700;
+    }
+    .logo-sub { font-size: 13px; color: var(--muted); }
+ 
+    .nav-right {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 16px;
+    }
+ 
+    .connected-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--muted);
+    }
+    .connected-badge .dot {
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 5px var(--green);
+    }
+    .connected-badge strong { color: var(--text); font-weight: 500; }
+ 
+    .btn-ghost {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--muted);
+      font-size: 13px; font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+      text-decoration: none;
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+ 
+    /* MAIN */
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 28px 60px; }
+ 
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: var(--muted);
+      margin-bottom: 20px;
+    }
+    .breadcrumb a { color: var(--muted); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--text); }
+    .breadcrumb span { color: var(--text); }
+ 
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px; font-weight: 700;
+      letter-spacing: -.4px;
+      margin-bottom: 6px;
+    }
+    .page-sub { color: var(--muted); margin-bottom: 28px; }
+ 
+    /* STAT CARDS */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+ 
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+ 
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+ 
+    .stat-label svg { width: 14px; height: 14px; opacity: .6; }
+ 
+    .stat-value {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 30px; font-weight: 700;
+      letter-spacing: -.5px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+ 
+    .stat-value.warn { color: var(--yellow); }
+    .stat-value.danger { color: var(--red); }
+ 
+    .stat-detail { font-size: 12px; color: var(--muted); }
+ 
+    /* TABLE SECTION */
+    .table-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+ 
+    .table-meta { font-size: 13px; color: var(--muted); }
+    .table-meta strong { color: var(--text); }
+ 
+    .btn-filter {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--muted);
+      font-size: 13px; font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-filter:hover { border-color: var(--accent); color: var(--text); }
+ 
+    /* DATE FILTER */
+    .date-filter {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      display: flex; align-items: center; gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+ 
+    .date-group { display: flex; align-items: center; gap: 8px; }
+    .date-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+ 
+    .date-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      color: var(--text);
+      font-size: 13px; font-family: 'Inter', sans-serif;
+      width: 130px;
+    }
+    .date-input:focus { outline: none; border-color: var(--accent); }
+ 
+    .preset-btns { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+ 
+    .preset {
+      padding: 6px 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 12px; font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .preset:hover, .preset.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+ 
+    .btn-apply {
+      padding: 6px 16px;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn-apply:hover { opacity: .85; }
+ 
+    /* TABLE */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+ 
+    table { width: 100%; border-collapse: collapse; }
+ 
+    thead tr {
+      border-bottom: 1px solid var(--border);
+    }
+ 
+    th {
+      padding: 12px 18px;
+      text-align: left;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+    }
+ 
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { color: var(--text); }
+    th .sort-icon { opacity: .4; margin-left: 4px; }
+ 
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .1s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,.02); }
+ 
+    td { padding: 14px 18px; vertical-align: middle; }
+ 
+    .sender-name { font-weight: 500; color: var(--text); margin-bottom: 2px; }
+    .sender-email { font-size: 12px; color: var(--muted); }
+ 
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px; font-weight: 600;
+    }
+ 
+    .badge-bulk       { background: rgba(245,158,11,.15); color: #f59e0b; }
+    .badge-promo      { background: rgba(79,124,255,.15); color: #4f7cff; }
+    .badge-phishing   { background: rgba(239,68,68,.15);  color: #ef4444; }
+    .badge-newsletter { background: rgba(34,197,94,.15);  color: #22c55e; }
+ 
+    .count { font-weight: 600; color: var(--text); }
+    .count-warn { font-weight: 600; color: var(--yellow); }
+    .count-danger { font-weight: 600; color: var(--red); }
+ 
+    .size-val { color: var(--muted); }
+    .date-val { color: var(--muted); font-size: 13px; }
+ 
+    /* SELECT CHECKBOX */
+    input[type="checkbox"] {
+      width: 15px; height: 15px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+ 
+    /* DELETE BAR */
+    .delete-bar {
+      display: none;
+      align-items: center; gap: 12px;
+      padding: 12px 18px;
+      background: rgba(239,68,68,.08);
+      border: 1px solid rgba(239,68,68,.2);
+      border-radius: var(--radius);
+      margin-bottom: 14px;
+    }
+    .delete-bar.visible { display: flex; }
+    .delete-bar span { font-size: 13px; color: var(--muted); }
+    .delete-bar strong { color: var(--text); }
+ 
+    .btn-delete {
+      margin-left: auto;
+      padding: 7px 16px;
+      background: var(--red);
+      border: none;
+      border-radius: 7px;
+      color: #fff;
+      font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn-delete:hover { opacity: .85; }
+ 
+    @media (max-width: 768px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .preset-btns { display: none; }
+      th:nth-child(n+4), td:nth-child(n+4) { display: none; }
+    }
+  </style>
+</head>
+<body>
+ 
+<nav>
+  <div class="logo-mark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+  </div>
+  <span class="logo-text">EmailCleaner</span>
+  <span class="logo-sub">for Gmail</span>
+ 
+  <div class="nav-right">
+    <div class="connected-badge">
+      <div class="dot"></div>
+      Connected &middot; <strong>{{ email }}</strong>
+    </div>
+    <a href="/logout" class="btn-ghost">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Disconnect
+    </a>
+    <button class="btn-ghost" onclick="location.reload()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Refresh
+    </button>
+  </div>
+</nav>
+ 
+<main>
+  <div class="breadcrumb">
+    <a href="#">Gmail</a>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    <span>Spam Analysis</span>
+  </div>
+ 
+  <h1>Top Spam Senders</h1>
+  <p class="page-sub">Your top email spam sources ranked by volume. Select senders to delete their emails.</p>
+ 
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Total Spam Emails
+      </div>
+      <div class="stat-value">3,912</div>
+      <div class="stat-detail">across 10 senders</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Phishing Threats
+      </div>
+      <div class="stat-value warn">3</div>
+      <div class="stat-detail">944 emails flagged</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Unread Spam
+      </div>
+      <div class="stat-value danger">1,456</div>
+      <div class="stat-detail">37% of total</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        Storage Used
+      </div>
+      <div class="stat-value">253 MB</div>
+      <div class="stat-detail">by spam senders</div>
+    </div>
+  </div>
+ 
+  <div class="table-header">
+    <div class="table-meta"><strong>10 senders</strong> &middot; 3,912 total emails</div>
+    <button class="btn-filter" onclick="toggleFilter()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      Filter by Date
+    </button>
+  </div>
+ 
+  <div class="date-filter" id="dateFilter" style="display:none">
+    <div class="date-group">
+      <span class="date-label">From</span>
+      <input type="date" class="date-input"/>
+    </div>
+    <div class="date-group">
+      <span class="date-label">To</span>
+      <input type="date" class="date-input"/>
+    </div>
+    <div class="preset-btns">
+      <button class="preset" onclick="setPreset(this)">Last 30 days</button>
+      <button class="preset" onclick="setPreset(this)">Last 90 days</button>
+      <button class="preset" onclick="setPreset(this)">Last 6 months</button>
+      <button class="preset" onclick="setPreset(this)">Last year</button>
+      <button class="preset active" onclick="setPreset(this)">All time</button>
+    </div>
+    <button class="btn-apply">Apply Filter</button>
+  </div>
+ 
+  <div class="delete-bar" id="deleteBar">
+    <span><strong id="selectedCount">0</strong> senders selected</span>
+    <button class="btn-delete">🗑 Delete All Emails from Selected</button>
+  </div>
+ 
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:36px"><input type="checkbox" id="selectAll" onchange="toggleAll(this)"/></th>
+          <th>Sender</th>
+          <th>Category</th>
+          <th class="sortable">Emails ↕</th>
+          <th>Unread</th>
+          <th>Size</th>
+          <th>Latest</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><input type="checkbox" class="row-check" onchange="updateBar()"/></td>
+          <td><div class="sender-name">Mass Mailer Pro</div><div class="sender-email">noreply@mass-mailer-pro.net</div></td>
+          <td><span class="badge badge-bulk">Bulk</span></td>
+          <td><span class="count">847</span></td>
+          <td><span class="count-warn">212</span></td>
+          <td><span class="size-val">34.2 MB</span></td>
+          <td><span class="date-val">2026-06-08</span></td>
+        </tr>
+        <tr>
+          <td><input type="checkbox" class="row-check" onchange="updateBar()"/></td>
+          <td><div class="sender-name">ShopBargain Unlimited</div><div class="sender-email">deals@shopbargain-unlimited.com</div></td>
+          <td><span class="badge badge-promo">Promotions</span></td>
+          <td><span class="count">612</span></td>
+          <td><span class="count-warn">88</span></td>
+          <td><span class="size-val">28.9 MB</span></td>
+          <td><span class="date-val">2026-06-07</span></td>
+        </tr>
+        <tr>
+          <td><input type="checkbox" class="row-check" onchange="updateBar()"/></td>
+          <td><div class="sender-name">Secure Login Alert</div><div class="sender-email">alert@secure-login-verify.xyz</div></td>
+          <td><span class="badge badge-phishing">⚠ Phishing</span></td>
+          <td><span class="count">503</span></td>
+          <td><span class="count-danger">503</span></td>
+          <td><span class="size-val">12.1 MB</span></td>
+          <td><span class="date-val">2026-06-09</span></td>
+        </tr>
+        <tr>
+          <td><input type="checkbox" class="row-check" onchange="updateBar()"/></td>
+          <td><div class="sender-name">Daily Deals Newsletter</div><div class="sender-email">news@dailydeals.io</div></td>
+          <td><span class="badge badge-newsletter">Newsletter</span></td>
+          <td><span class="count">489</span></td>
+          <td><span class="count-warn">104</span></td>
+          <td><span class="size-val">19.7 MB</span></td>
+          <td><span class="date-val">2026-06-10</span></td>
+        </tr>
+        <tr>
+          <td><input type="checkbox" class="row-check" onchange="updateBar()"/></td>
+          <td><div class="sender-name">Prize Winner Network</div><div class="sender-email">winners@prize-net.co</div></td>
+          <td><span class="badge badge-phishing">⚠ Phishing</span></td>
+          <td><span class="count">441</span></td>
+          <td><span class="count-danger">441</span></td>
+          <td><span class="size-val">8.3 MB</span></td>
+          <td><span class="date-val">2026-06-05</span></td>
+        </tr>
+        <tr>
+          <td><input type="checkbox" class="row-check" onchange="updateBar()"/></td>
+          <td><div class="sender-name">Flash Sale Alerts</div><div class="sender-email">noreply@flashsale-hub.com</div></td>
+          <td><span class="badge badge-promo">Promotions</span></td>
+          <td><span class="count">378</span></td>
+          <td><span class="count-warn">55</span></td>
+          <td><span class="size-val">15.4 MB</span></td>
+          <td><span class="date-val">2026-06-11</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+ 
+<script>
+  function toggleFilter() {
+    const f = document.getElementById('dateFilter');
+    f.style.display = f.style.display === 'none' ? 'flex' : 'none';
+  }
+ 
+  function setPreset(el) {
+    document.querySelectorAll('.preset').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+ 
+  function toggleAll(cb) {
+    document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked);
+    updateBar();
+  }
+ 
+  function updateBar() {
+    const checked = document.querySelectorAll('.row-check:checked').length;
+    const bar = document.getElementById('deleteBar');
+    document.getElementById('selectedCount').textContent = checked;
+    bar.classList.toggle('visible', checked > 0);
+  }
+</script>
+</body>
+</html>

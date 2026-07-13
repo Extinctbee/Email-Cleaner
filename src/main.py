@@ -47,7 +47,7 @@ async def callback(request: Request):
 
     token_filename = f"{email}_token.pickle"
     gmail.save_creds(creds, token_filename)
-    database.save_user(email, token_filename)
+    database.save_user_to_db(email, token_filename)
 
     request.session['email'] = email
     return RedirectResponse("/dashboard")
@@ -57,4 +57,20 @@ async def dashboard(request: Request):
     email = request.session.get('email')
     if not email:
         return RedirectResponse("/")
-    return templates.TemplateResponse("dashboard.html", {"request": request, "email": email})
+    creds = gmail.load_creds(email)
+    service = gmail.build_service(creds)
+    raw_data = gmail.scan_inbox_by_batches(service, max_pages=10)
+
+    senders = [
+        {"email": sender, "count": count}
+        for sender, count in sorted(raw_data.items(), key=lambda x: x[1], reverse=True)
+    ]
+    total = sum(s["count"] for s in senders)
+
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "email": email,
+        "senders": senders,
+        "total": total,
+        "sender_count": len(senders)
+    })
