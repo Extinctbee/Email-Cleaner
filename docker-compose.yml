@@ -5,7 +5,7 @@ services:
     platform: linux/amd64
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: supersecretpassword123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: email_cleaner
       OAUTHLIB_INSECURE_TRANSPORT: "1"
     ports:
@@ -26,7 +26,7 @@ services:
       DB_HOST: email_cleaner_db
       DB_NAME: email_cleaner
       DB_USER: admin
-      DB_PASSWORD: supersecretpassword123
+      DB_PASSWORD:  ${DB_PASSWORD}
     ports:
       - "8000:8000"
     volumes:

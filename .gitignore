@@ -9,3 +9,5 @@ config.py
 # Python temporary files and cache
 __pycache__/
 *.pyc
+
+*.pickle
