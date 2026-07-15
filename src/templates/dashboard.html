@@ -363,8 +363,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         Total Spam Emails
       </div>
-      <div class="stat-value">3,912</div>
-      <div class="stat-detail">across 10 senders</div>
+      <div class="stat-value">{{ total }}</div>
+      <div class="stat-detail">across {{ sender_count }} senders</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">
@@ -393,7 +393,7 @@
   </div>
  
   <div class="table-header">
-    <div class="table-meta"><strong>10 senders</strong> &middot; 3,912 total emails</div>
+    <div class="table-meta"><strong>{{ sender_count }} senders</strong> &middot; {{ total }} total emails</div>
     <button class="btn-filter" onclick="toggleFilter()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
       Filter by Date
@@ -438,60 +438,21 @@
         </tr>
       </thead>
       <tbody>
+        {% for s in senders %}
         <tr>
-          <td><input type="checkbox" class="row-check" onchange="updateBar()"/></td>
-          <td><div class="sender-name">Mass Mailer Pro</div><div class="sender-email">noreply@mass-mailer-pro.net</div></td>
-          <td><span class="badge badge-bulk">Bulk</span></td>
-          <td><span class="count">847</span></td>
-          <td><span class="count-warn">212</span></td>
-          <td><span class="size-val">34.2 MB</span></td>
-          <td><span class="date-val">2026-06-08</span></td>
+            <td><input type="checkbox" class="row-check" onchange="updateBar()" value="{{ s.email }}"/></td>
+            <td>
+            <div class="sender-name">{{ s.email }}</div>
+            </td>
+            <td><span class="badge badge-promo">Promotions</span></td>
+            <td><span class="count">{{ s.count }}</span></td>
+            <td>—</td>
+            <td>—</td>
+            <td>—</td>
         </tr>
-        <tr>
-          <td><input type="checkbox" class="row-check" onchange="updateBar()"/></td>
-          <td><div class="sender-name">ShopBargain Unlimited</div><div class="sender-email">deals@shopbargain-unlimited.com</div></td>
-          <td><span class="badge badge-promo">Promotions</span></td>
-          <td><span class="count">612</span></td>
-          <td><span class="count-warn">88</span></td>
-          <td><span class="size-val">28.9 MB</span></td>
-          <td><span class="date-val">2026-06-07</span></td>
-        </tr>
-        <tr>
-          <td><input type="checkbox" class="row-check" onchange="updateBar()"/></td>
-          <td><div class="sender-name">Secure Login Alert</div><div class="sender-email">alert@secure-login-verify.xyz</div></td>
-          <td><span class="badge badge-phishing">⚠ Phishing</span></td>
-          <td><span class="count">503</span></td>
-          <td><span class="count-danger">503</span></td>
-          <td><span class="size-val">12.1 MB</span></td>
-          <td><span class="date-val">2026-06-09</span></td>
-        </tr>
-        <tr>
-          <td><input type="checkbox" class="row-check" onchange="updateBar()"/></td>
-          <td><div class="sender-name">Daily Deals Newsletter</div><div class="sender-email">news@dailydeals.io</div></td>
-          <td><span class="badge badge-newsletter">Newsletter</span></td>
-          <td><span class="count">489</span></td>
-          <td><span class="count-warn">104</span></td>
-          <td><span class="size-val">19.7 MB</span></td>
-          <td><span class="date-val">2026-06-10</span></td>
-        </tr>
-        <tr>
-          <td><input type="checkbox" class="row-check" onchange="updateBar()"/></td>
-          <td><div class="sender-name">Prize Winner Network</div><div class="sender-email">winners@prize-net.co</div></td>
-          <td><span class="badge badge-phishing">⚠ Phishing</span></td>
-          <td><span class="count">441</span></td>
-          <td><span class="count-danger">441</span></td>
-          <td><span class="size-val">8.3 MB</span></td>
-          <td><span class="date-val">2026-06-05</span></td>
-        </tr>
-        <tr>
-          <td><input type="checkbox" class="row-check" onchange="updateBar()"/></td>
-          <td><div class="sender-name">Flash Sale Alerts</div><div class="sender-email">noreply@flashsale-hub.com</div></td>
-          <td><span class="badge badge-promo">Promotions</span></td>
-          <td><span class="count">378</span></td>
-          <td><span class="count-warn">55</span></td>
-          <td><span class="size-val">15.4 MB</span></td>
-          <td><span class="date-val">2026-06-11</span></td>
-        </tr>
+        {% endfor %}
+        
+         
       </tbody>
     </table>
   </div>

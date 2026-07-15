@@ -96,6 +96,13 @@ def save_creds(creds, token_filename):
     with open(token_filename, 'wb') as token:
         pickle.dump(creds, token)
 
+def load_creds(email):
+    token_filename = database.get_token_filename(email) or f"{email}_token.pickle"
+    if os.path.exists(token_filename):
+        with open(token_filename, 'rb') as token:
+            return pickle.load(token)
+    return None
+
 
 
     
