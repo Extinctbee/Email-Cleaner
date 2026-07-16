@@ -13,7 +13,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin  -d email_cleaner "]
+      test: ["CMD-SHELL", "pg_isready -U admin -d email_cleaner"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,7 +26,7 @@ services:
       DB_HOST: email_cleaner_db
       DB_NAME: email_cleaner
       DB_USER: admin
-      DB_PASSWORD:  ${DB_PASSWORD}
+      DB_PASSWORD: ${DB_PASSWORD}
     ports:
       - "8000:8000"
     volumes:
@@ -35,7 +35,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
   postgres_data:

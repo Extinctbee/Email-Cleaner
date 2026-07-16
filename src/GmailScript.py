@@ -88,6 +88,49 @@ def trash_email(service, message_id):
     except Exception as e:
         print(f"Error: {e}")
 
+def trash_emails_from_sender(service, sender_email):
+    trashed = 0
+    page_token = None
+    while True:
+        results = service.users().messages().list(
+            userId='me',
+            q=f'from:{sender_email} category:promotions',
+            maxResults=100,
+            pageToken=page_token
+        ).execute()
+        messages = results.get('messages', [])
+        if not messages:
+            break
+        for msg in messages:
+            trash_email(service, msg['id'])
+            trashed += 1
+        page_token = results.get('nextPageToken')
+        if not page_token:
+            break
+    return trashed
+
+def filter_by_date(service, start_date, end_date):
+    start_date = start_date.replace("-", "/")
+    end_date = end_date.replace("-", "/")
+    # Gmail API uses the format YYYY/MM/DD for date filtering, so we replace "-" with "/"
+    # The query will filter emails that are after the start_date and before the end_date, and also in the promotions category.
+    query = f'after:{start_date} before:{end_date} category:promotions'
+
+    messages = []
+    page_token = None
+    ''' Loop through pages of results with the pageToken parameter until 
+    
+    there are no more pages left. This allows us to retrieve all messages that match the query.
+    '''
+    while True:            
+        results = service.users().messages().list(userId='me', q=query, pageToken=page_token).execute()
+        messages.extend(results.get('messages', []))
+        page_token = results.get('nextPageToken')
+        if not page_token:
+            break
+
+    return messages
+
 
 def build_service(creds):
     return build('gmail', 'v1', credentials=creds)
@@ -95,6 +138,13 @@ def build_service(creds):
 def save_creds(creds, token_filename):
     with open(token_filename, 'wb') as token:
         pickle.dump(creds, token)
+
+def load_creds(email):
+    token_filename = database.get_token_filename(email) or f"{email}_token.pickle"
+    if os.path.exists(token_filename):
+        with open(token_filename, 'rb') as token:
+            return pickle.load(token)
+    return None
 
 
 
