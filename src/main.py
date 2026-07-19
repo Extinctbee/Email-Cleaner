@@ -77,7 +77,7 @@ async def dashboard(request: Request):
     })
 
 @app.post("/trash")
-async def trash_senders(request: Request, senders: List[str] = Form(...)):
+async def trash_senders(request: Request, senders: List[str] = Form(...), start_date: str = Form(None), end_date: str = Form(None)):
     email = request.session.get('email')
     if not email:
         return RedirectResponse("/")
@@ -87,7 +87,7 @@ async def trash_senders(request: Request, senders: List[str] = Form(...)):
 
     total_trashed = 0
     for sender in senders:
-        total_trashed += gmail.trash_emails_from_sender(service, sender)
+        total_trashed += gmail.trash_emails_from_sender(service, sender , start_date, end_date)
 
     return RedirectResponse(f"/dashboard?trashed={total_trashed}", status_code=303)
 #allows user to filter emails by date range
@@ -100,27 +100,18 @@ async def filter_date(request: Request, start_date: str = Form(...), end_date: s
     creds = gmail.load_creds(email)
     service = gmail.build_service(creds)
     #puts the filtered emails into messages variable
-    messages = gmail.filter_by_date(service, start_date, end_date)
-    senders = {}
-    #loops through the filtered emails and counts the number of emails from each sender
-    batch = service.new_batch_http_request(callback=callback)
-    for msg in messages:
-        batch.add(service.users().messages().get(userId='me', id=msg['id'], format='metadata', metadataHeaders=['From']))
-    batch.execute()
-    # Process the results from the batch request
-    for sender, count in senders.items():
-        senders[sender] = count
-
-    sorted_senders = sorted(senders.items(), key=lambda x: x[1], reverse=True)
-    #calculates the total number of emails from the filtered senders
-    total = sum(count for _, count in sorted_senders)
+    sender_counts = gmail.filter_by_date(service, start_date, end_date)
+    
+    sorted_senders = sorted(sender_counts.items(), key=lambda x: x[1], reverse=True)
+    
+    
     #renders the dashboard template with the filtered senders and their email counts, along with the total number of emails and the date range used for filtering
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "email": email,
         "senders": [{"email": sender, "count": count} for sender, count in sorted_senders],
-        "total": total,
-        "sender_count": len(sorted_senders),
+        "total": sum(sender_counts.values()),
+        "sender_count": len(sender_counts),
         "start_date": start_date,
         "end_date": end_date
     })

@@ -388,16 +388,16 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         Phishing Threats
       </div>
-      <div class="stat-value warn">3</div>
-      <div class="stat-detail">944 emails flagged</div>
+      <div class="stat-value warn">-</div>
+      <div class="stat-detail"> - emails flagged</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         Unread Spam
       </div>
-      <div class="stat-value danger">1,456</div>
-      <div class="stat-detail">37% of total</div>
+      <div class="stat-value danger">-</div>
+      <div class="stat-detail"> - of total</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">
@@ -443,6 +443,10 @@
   </form>
  
   <form id="trashForm" method="POST" action="/trash">
+    {% if start_date %}
+  <input type="hidden" name="start_date" value="{{ start_date }}"/>
+  <input type="hidden" name="end_date" value="{{ end_date }}"/>
+  {% endif %}
   <div class="delete-bar" id="deleteBar">
     <span><strong id="selectedCount">0</strong> senders selected</span>
     <button type="button" class="btn-delete" onclick="confirmDelete()">🗑 Move to Trash</button>
@@ -489,42 +493,29 @@
     f.style.display = f.style.display === 'none' ? 'flex' : 'none';
   }
  
-  function setPreset(el) {
-    document.querySelectorAll('.preset').forEach(b => b.classList.remove('active'));
-    el.classList.add('active');
+  
+   function setPreset(el) {
+  document.querySelectorAll('.preset').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
 
-    // 2. Get references to your HTML inputs
-  const startDateInput = document.getElementById('startDateInput');
-  const endDateInput = document.getElementById('endDateInput');
-
-  // 3. Establish our dates (Today is the anchor)
   const today = new Date();
-  let startDate = new Date();
+  let start = new Date();
 
-  // Helper function to format dates into YYYY-MM-DD for HTML5 date inputs
-  const formatDate = (date) => date.toISOString().split('T')[0];
-
-  // Get the label text of the clicked button (e.g., "Last 30 days")
-  const presetText = el.textContent.trim();
-
-  // 4. Calculate the date range based on the button clicked
-  if (presetText === "Last 30 days") {
-    startDate.setDate(today.getDate() - 30);
-  } else if (presetText === "Last 90 days") {
-    startDate.setDate(today.getDate() - 90);
-  } else if (presetText === "Last 6 months") {
-    startDate.setMonth(today.getMonth() - 6);
-  } else if (presetText === "Last year") {
-    startDate.setFullYear(today.getFullYear() - 1);
-  } else if (presetText === "All time") {
-    // Set to a historical baseline date so it captures everything
-    startDate = new Date('2000-01-01'); 
+  const label = el.textContent.trim();
+  if (label === 'Last 30 days') start.setDate(today.getDate() - 30);
+  else if (label === 'Last 90 days') start.setDate(today.getDate() - 90);
+  else if (label === 'Last 6 months') start.setMonth(today.getMonth() - 6);
+  else if (label === 'Last year') start.setFullYear(today.getFullYear() - 1);
+  else if (label === 'All time') {
+    document.querySelector('input[name="start_date"]').value = '2004-01-01';
+    document.querySelector('input[name="end_date"]').value = today.toISOString().split('T')[0];
+    return;
   }
 
-  // 5. Inject the calculated values directly into the input fields
-  startDateInput.value = formatDate(startDate);
-  endDateInput.value = formatDate(today);
+  document.querySelector('input[name="start_date"]').value = start.toISOString().split('T')[0];
+  document.querySelector('input[name="end_date"]').value = today.toISOString().split('T')[0];
 }
+
   
  
   function toggleAll(cb) {
