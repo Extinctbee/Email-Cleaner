@@ -1,11 +1,15 @@
 import os
 import pickle
+from sys import exception
+from urllib import response
+from wsgiref import headers
 import pandas as pd
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
 import database
+from main import callback
 
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
@@ -88,25 +92,37 @@ def trash_email(service, message_id):
     except Exception as e:
         print(f"Error: {e}")
 
-def trash_emails_from_sender(service, sender_email):
+def trash_emails_from_sender(service, sender_email , start_date=None, end_date=None):
     trashed = 0
     page_token = None
+    
     while True:
+
+        query = f'from:{sender_email} category:promotions'
+        if start_date and end_date:
+            start = start_date.replace("-", "/")
+            end = end_date.replace("-", "/")
+            query += f' after:{start} before:{end}' 
+
         results = service.users().messages().list(
             userId='me',
-            q=f'from:{sender_email} category:promotions',
+            q= query
+            ,
             maxResults=100,
             pageToken=page_token
         ).execute()
         messages = results.get('messages', [])
         if not messages:
             break
+        batch = service.new_batch_http_request()
         for msg in messages:
-            trash_email(service, msg['id'])
+            batch.add(service.users().messages().trash(userId='me', id=msg['id']))
             trashed += 1
+        batch.execute()
         page_token = results.get('nextPageToken')
         if not page_token:
             break
+   
     return trashed
 
 def filter_by_date(service, start_date, end_date):
@@ -115,21 +131,52 @@ def filter_by_date(service, start_date, end_date):
     # Gmail API uses the format YYYY/MM/DD for date filtering, so we replace "-" with "/"
     # The query will filter emails that are after the start_date and before the end_date, and also in the promotions category.
     query = f'after:{start_date} before:{end_date} category:promotions'
+    senders_counts = {}
+    
+    print(f"DEBUG query: {query}")  # add this
 
-    messages = []
     page_token = None
     ''' Loop through pages of results with the pageToken parameter until 
     
     there are no more pages left. This allows us to retrieve all messages that match the query.
     '''
+     # Process the results from the batch request
+    def callback(request_id, response, exception):
+        if exception is not None:
+            return
+        headers = response.get('payload', {}).get('headers', [])
+        for header in headers:
+            if header['name'] == 'From':
+                sender = header['value']
+                senders_counts[sender] = senders_counts.get(sender, 0) + 1
+                print(f"DEBUG found sender: {sender}")
     while True:            
-        results = service.users().messages().list(userId='me', q=query, pageToken=page_token).execute()
-        messages.extend(results.get('messages', []))
+        results = service.users().messages().list(
+            userId='me', 
+            q=query, 
+             pageToken=page_token,
+             maxResults=100
+             ).execute()
+       
+        
+        page_messages = results.get('messages', [])
+        print(f"DEBUG page_messages count: {len(page_messages)}")
+        if not page_messages:
+            break
+
+        batch = service.new_batch_http_request(callback=callback)                                    
+        for msg in page_messages:
+            batch.add(service.users().messages().get(userId='me', id=msg['id'], format='metadata', metadataHeaders=['From']))
+        batch.execute()
         page_token = results.get('nextPageToken')
+
         if not page_token:
             break
 
-    return messages
+        
+        
+
+    return senders_counts
 
 
 def build_service(creds):
